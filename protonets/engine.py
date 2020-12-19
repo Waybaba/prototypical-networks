@@ -24,7 +24,7 @@ class Engine(object):
 
         state['optimizer'] = state['optim_method'](state['model'].parameters(), **state['optim_config'])
 
-        self.hooks['on_start'](state)
+        self.hooks['on_start'](state) # hook: on_start
         while state['epoch'] < state['max_epoch'] and not state['stop']:
             state['model'].train()
 

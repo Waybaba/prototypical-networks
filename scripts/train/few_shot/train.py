@@ -17,31 +17,37 @@ import protonets.utils.data as data_utils
 import protonets.utils.model as model_utils
 import protonets.utils.log as log_utils
 
-def main(opt):
-    if not os.path.isdir(opt['log.exp_dir']):
+'''
+log.exp_dir
+    opt.json # args
+    trace.txt # 
+    
+'''
+def main(opt): # opt = args, a dict of all arguments
+    if not os.path.isdir(opt['log.exp_dir']): # make log export dir
         os.makedirs(opt['log.exp_dir'])
 
-    # save opts
-    with open(os.path.join(opt['log.exp_dir'], 'opt.json'), 'w') as f:
+    with open(os.path.join(opt['log.exp_dir'], 'opt.json'), 'w') as f: # save opts
         json.dump(opt, f)
         f.write('\n')
 
     trace_file = os.path.join(opt['log.exp_dir'], 'trace.txt')
 
-    # Postprocess arguments
-    opt['model.x_dim'] = list(map(int, opt['model.x_dim'].split(',')))
+    
+    opt['model.x_dim'] = list(map(int, opt['model.x_dim'].split(','))) # turn str into number
     opt['log.fields'] = opt['log.fields'].split(',')
 
     torch.manual_seed(1234)
     if opt['data.cuda']:
         torch.cuda.manual_seed(1234)
 
-    if opt['data.trainval']:
-        data = data_utils.load(opt, ['trainval'])
+    if opt['data.trainval']: # train 
+        data = data_utils.load(opt, ['trainval']) # return a list corresponding to the [] list
         train_loader = data['trainval']
         val_loader = None
-    else:
-        data = data_utils.load(opt, ['train', 'val'])
+
+    else: # or validation # default
+        data = data_utils.load(opt, ['train', 'val']) 
         train_loader = data['train']
         val_loader = data['val']
 
@@ -57,6 +63,7 @@ def main(opt):
     if val_loader is not None:
         meters['val'] = { field: tnt.meter.AverageValueMeter() for field in opt['log.fields'] }
 
+    '''def hooks of engine'''
     def on_start(state):
         if os.path.isfile(trace_file):
             os.remove(trace_file)
@@ -117,7 +124,6 @@ def main(opt):
             torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.pt'))
             if opt['data.cuda']:
                 state['model'].cuda()
-
     engine.hooks['on_end_epoch'] = partial(on_end_epoch, { })
 
     engine.train(

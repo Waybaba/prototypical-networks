@@ -67,4 +67,10 @@ parser.add_argument('--log.exp_dir', type=str, default=default_exp_dir, metavar=
 
 args = vars(parser.parse_args())
 
+def show_args(args):
+    print("===args====================")
+    for k, v in args.items():
+        print(f"  {k}: {v}")
+    print("===args====================")
+show_args(args)
 main(args)

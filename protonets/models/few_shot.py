@@ -22,7 +22,11 @@ class Protonet(nn.Module):
         self.encoder = encoder
 
     def loss(self, sample):
-        xs = Variable(sample['xs']) # support
+        '''
+        input: one set of data, including support sample and query sample
+        return: loss, info{}
+        '''
+        xs = Variable(sample['xs']) # support 
         xq = Variable(sample['xq']) # query
 
         n_class = xs.size(0)
@@ -37,21 +41,21 @@ class Protonet(nn.Module):
             target_inds = target_inds.cuda()
 
         x = torch.cat([xs.view(n_class * n_support, *xs.size()[2:]),
-                       xq.view(n_class * n_query, *xq.size()[2:])], 0)
+                       xq.view(n_class * n_query, *xq.size()[2:])], 0) # concat support and query set [n_class*(n_support+n_query), ...]
 
-        z = self.encoder.forward(x)
+        z = self.encoder.forward(x) # encoder all data points
         z_dim = z.size(-1)
 
-        z_proto = z[:n_class*n_support].view(n_class, n_support, z_dim).mean(1)
-        zq = z[n_class*n_support:]
+        z_proto = z[:n_class*n_support].view(n_class, n_support, z_dim).mean(1) # centers [n_class, z_dim]
+        zq = z[n_class*n_support:] # split for query data. [n_class*n_query, z_dim]
 
-        dists = euclidean_dist(zq, z_proto)
+        dists = euclidean_dist(zq, z_proto) # [n_class*n_query, n_class]
 
-        log_p_y = F.log_softmax(-dists, dim=1).view(n_class, n_query, -1)
+        log_p_y = F.log_softmax(-dists, dim=1).view(n_class, n_query, -1) # [n_class, n_query, n_class]
 
-        loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean()
+        loss_val = -log_p_y.gather(2, target_inds).squeeze().view(-1).mean() # gather out the dim of label # loss = y*log(\hat y)
 
-        _, y_hat = log_p_y.max(2)
+        _, y_hat = log_p_y.max(2) # cal y_hat for acc
         acc_val = torch.eq(y_hat, target_inds.squeeze()).float().mean()
 
         return loss_val, {
