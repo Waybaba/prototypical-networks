@@ -41,7 +41,12 @@ def main(opt): # opt = args, a dict of all arguments
     if opt['data.cuda']:
         torch.cuda.manual_seed(1234)
 
-    if opt['data.trainval']: # train 
+    if opt['odg']: # TODO add para
+        data = data_utils.load(opt, ['odg_train', 'odg_test']) # return a list corresponding to the [] list
+        train_loader = data['odg_train']
+        val_loader = data['odg_test']
+
+    elif opt['data.trainval']: # train 
         data = data_utils.load(opt, ['trainval']) # return a list corresponding to the [] list
         train_loader = data['trainval']
         val_loader = None

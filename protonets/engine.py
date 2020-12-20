@@ -35,6 +35,7 @@ class Engine(object):
             for sample in tqdm(state['loader'], desc="Epoch {:d} train".format(state['epoch'] + 1)):
                 state['sample'] = sample
                 self.hooks['on_sample'](state)
+                # print(sample['class'][0][-6:])
 
                 state['optimizer'].zero_grad()
                 loss, state['output'] = state['model'].loss(state['sample'])
