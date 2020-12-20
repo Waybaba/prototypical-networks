@@ -98,6 +98,41 @@ def load_class_images_odg(d):
                 break # only need one sample because batch size equal to dataset length
     return {'class': origin_class, 'data': OMNIGLOT_CACHE[origin_class], 'data_next': OMNIGLOT_CACHE[next_class]} # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
 
+def load_class_images_odg_unfair(mode, d):
+    '''
+    input: class name. eg. Atemayar_Qelisayer/c...r12/rot180
+    return: eg. {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
+    '''
+    def next_rot(c):
+        alphabet, character, rot = c.split('/')
+        rot = rot[:3] + str(int(rot[3:]) + 15)
+        c = '/'.join([alphabet, character, rot])
+        return c
+    origin_class = d['class']
+    next_class = next_rot(origin_class) if mode == 'odg_test' else origin_class
+    for c in [origin_class, next_class]:
+        if c not in OMNIGLOT_CACHE:
+            alphabet, character, rot = c.split('/')
+            image_dir = os.path.join(OMNIGLOT_DATA_DIR, 'data', alphabet, character)
+
+            class_images = sorted(glob.glob(os.path.join(image_dir, '*.png'))) # get all path in dir Atemayar_Qelisayer/c...r12/rot180
+            if len(class_images) == 0:
+                raise Exception("No images found for omniglot class {} at {}. Did you run download_omniglot.sh first?".format(c, image_dir))
+
+            image_ds = TransformDataset(ListDataset(class_images), # here, we use loader for coherent, actually, we can use normal file loader.
+                                        compose([partial(convert_dict, 'file_name'),
+                                                partial(load_image_path, 'file_name', 'data'),
+                                                partial(rotate_image, 'data', float(rot[3:])), # rotate according to rot_xxx
+                                                partial(scale_image, 'data', 28, 28),
+                                                partial(convert_tensor, 'data')]))
+
+            loader = torch.utils.data.DataLoader(image_ds, batch_size=len(image_ds), shuffle=False)
+
+            for sample in loader:
+                OMNIGLOT_CACHE[c] = sample['data']
+                break # only need one sample because batch size equal to dataset length
+    return {'class': origin_class, 'data': OMNIGLOT_CACHE[origin_class], 'data_next': OMNIGLOT_CACHE[next_class]} # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
+
 def extract_episode(n_support, n_query, d):
     # data: N x C x H x W
     n_examples = d['data'].size(0) # = 20
@@ -167,7 +202,8 @@ def load(opt, splits):
         transforms = [partial(convert_dict, 'class'), # convert to {class: "Angelic/character01/rot000"}
                     #   load_class_images, # eg. {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28]} # include all data of \
                     #   partial(extract_episode, n_support, n_query)], # split into support query # {'class': , 'xs': , 'xq': }
-                      load_class_images_odg, # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
+                    #   load_class_images_odg, # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
+                      partial(load_class_images_odg_unfair, split), # TODO unfair ordg
                       partial(extract_episode_odg, n_support, n_query)] # split into support query # {'class': , 'xs': , 'xq': }
         if opt['data.cuda']: # append cuda transformer
             transforms.append(CudaTransform())
