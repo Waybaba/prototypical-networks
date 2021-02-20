@@ -202,8 +202,8 @@ def load(opt, splits):
         transforms = [partial(convert_dict, 'class'), # convert to {class: "Angelic/character01/rot000"}
                     #   load_class_images, # eg. {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28]} # include all data of \
                     #   partial(extract_episode, n_support, n_query)], # split into support query # {'class': , 'xs': , 'xq': }
-                    #   load_class_images_odg, # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
-                      partial(load_class_images_odg_unfair, split), # TODO unfair ordg
+                      load_class_images_odg, # {'class': 'Aurek-Besh/character21/rot180', 'data': [20, 1, 28, 28], 'data_next': [20, 1, 28, 28]}
+                    #   partial(load_class_images_odg_unfair, split), # TODO unfair ordg
                       partial(extract_episode_odg, n_support, n_query)] # split into support query # {'class': , 'xs': , 'xq': }
         if opt['data.cuda']: # append cuda transformer
             transforms.append(CudaTransform())
