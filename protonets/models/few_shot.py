@@ -147,7 +147,7 @@ def load_protonet_conv(**kwargs):
     return Protonet(encoder)
 
 @register_model('protonet_conv_2')
-def load_protonet_conv(**kwargs):
+def load_protonet_conv_2(**kwargs):
     x_dim = kwargs['x_dim']
     hid_dim = kwargs['hid_dim']
     z_dim = kwargs['z_dim']
