@@ -34,7 +34,7 @@ parser.add_argument('--data.sequential', action='store_true', help="use sequenti
 parser.add_argument('--data.cuda', action='store_true', help="run in CUDA mode (default: False)")
 
 # model args
-default_model_name = 'protonet_conv'
+default_model_name = 'protonet_conv_2'
 parser.add_argument('--model.model_name', type=str, default=default_model_name, metavar='MODELNAME',
                     help="model name (default: {:s})".format(default_model_name))
 parser.add_argument('--model.x_dim', type=str, default='1,28,28', metavar='XDIM',
