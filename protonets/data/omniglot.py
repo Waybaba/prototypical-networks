@@ -105,7 +105,7 @@ def load_class_images_odg_unfair(mode, d):
     '''
     def next_rot(c):
         alphabet, character, rot = c.split('/')
-        rot = rot[:3] + str(int(rot[3:]) + 15)
+        rot = rot[:3] + "0" + str(int(rot[3:]) + 15)
         c = '/'.join([alphabet, character, rot])
         return c
     origin_class = d['class']

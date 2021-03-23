@@ -48,15 +48,15 @@ class ODGSampler(object):
     def __len__(self):
         return self.n_episodes
 
-    def __iter__(self):
-        # total_rot_num = 7
-        self.n_real_classes = int(self.n_classes / 7)
+    def __iter__(self): # TODO set to right number
+        total_rot_num = 6
+        self.n_real_classes = int(self.n_classes / total_rot_num)
         for _ in range(self.n_episodes):
             idxs = torch.randperm(self.n_real_classes)[:self.n_way]
             if self.mode == 'odg_train':
-                yield (idxs * 7) + torch.randint(0, 5, size=(1,))
+                yield (idxs * total_rot_num) + torch.randint(0, total_rot_num - 2, size=(1,))
             elif self.mode == 'odg_test':
-                yield (idxs * 7) + 5
+                yield (idxs * total_rot_num) + total_rot_num - 2
             else:
                 raise NameError(self.mode)
             
